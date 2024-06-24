@@ -971,7 +971,7 @@ function formatTime(time) {
 				this.updateMessageJumpDown();
 			},
 			updateMessageJumpDown: function updateMessageJumpDown() {
-				if (this.messageJumpDownInProgress) return;
+				if (this.messageJumpDownInProgress || this.autoScrollEnabled) return;
 				var $lastMessage = this.$messageList.find('li:last');
 				if (!$lastMessage.length) return;
 				var doShow = this.$messageList.height() + this.$messageList.offset().top < $lastMessage.offset().top;
