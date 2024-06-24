@@ -15,13 +15,13 @@ Boilerplate for Tampermonkey userscripts in TypeScript
 1. Clone repo:
 
       ```bash
-      git clone https://github.com/equilpres/tampermonkey-typescript-boilerplate.git
+      git clone https://github.com/equilpres/zelenka-fix-7167530.git
       ```
 
 2. Go to project dir:
 
       ```bash
-      cd tampermonkey-typescript-boilerplate
+      cd zelenka-fix-7167530
       ```
 
 3. Install deps:
