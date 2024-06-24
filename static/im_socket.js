@@ -53,6 +53,11 @@ function isScrolledIntoView(elem) {
 	var elemBottom = elemTop + $(elem).height();
 	return elemBottom <= docViewBottom && elemTop >= docViewTop;
 }
+function isScrolledToBottom(e) {
+	const { scrollHeight, clientHeight, scrollTop } = e.target;
+
+	return Math.round(scrollHeight - clientHeight - scrollTop) === 0;
+}
 function listenCall(method, callback, obj) {
 	if (typeof method !== 'string' || typeof callback !== 'function') return;
 	obj = obj || window;
@@ -152,11 +157,14 @@ function formatTime(time) {
 				if (window1.location.hash.substring(1).indexOf('message-') >= 0) {
 					var $el = $1(window1.location.hash);
 					if ($el.length) {
-						$el[0].scrollIntoView();
+						$el[0].scrollIntoView(false);
 						disableScrolling = true;
 						this.animateBackgroundColor($el);
 					}
 				}
+				this.autoScrollEnabled = true;
+				this.middleMouseButtonDown = false;
+				this.requestAnimationFrameId = 0;
 				this.updateSelectors(disableScrolling);
 				this.loadPreviousMessagesInProgress = false;
 				this.loadNextMessagesInProgress = false;
@@ -164,6 +172,7 @@ function formatTime(time) {
 				this.initModChanger();
 				this.$conversationList.find('._loadConversation').on('click', $1.context(this, 'conversationListItemClickHandler'));
 				this.setMessageListScrollHandler();
+				this.setConversationMessagesScrollHandler();
 				this.loadConversationListIfNeeded();
 				this.initPopupLink();
 				TabControl.monitorTabVisibility();
@@ -217,11 +226,6 @@ function formatTime(time) {
 				// if (this.$ed) this.$ed.$textarea.on('lzt-editor:initDone', this.resize.bind(this));
 				$1(document1).on('lzt-editor:toolbar-toggle', this.resize.bind(this));
 				$container.find('ul.autoCompleteList').scrollbar();
-				$1('.conversationMessages img').on('load', function () {
-					if (_this.conversationListLoadInProgress !== false) {
-						_this.scrollDialogToBottom(true);
-					}
-				});
 			},
 			setConversationListTime: function setConversationListTime() {
 				$1('.conversationItem--messageDate').each(function () {
@@ -908,6 +912,7 @@ function formatTime(time) {
 					this.$typingNotice = this.$dialog.find('.TypingNotice');
 					this.setQuickReplyHandler();
 					this.setMessageListScrollHandler();
+					this.setConversationMessagesScrollHandler();
 					if (!$1('#messageDateContainer').length) {
 						$1('.scroll-wrapper.conversationMessages').prepend(
 							'<div id="messageDateContainer"><div id="messageDate"></div></div>',
@@ -1030,11 +1035,59 @@ function formatTime(time) {
 				} else this.$toConversationList.hide();
 			},
 			setMessageListScrollHandler: function setMessageListScrollHandler() {
-				if (Im.conversationId) {
-					this.$messageList.on('scroll', $1.context(this, 'messageListScroll'));
+				if (!Im.conversationId) {
+					return;
+				}
+
+				this.$messageList.on('scroll', $1.context(this, 'messageListScroll'));
+
+				for (const event of ['wheel', 'touchmove']) {
+					this.$messageList.on(event, $1.context(this, 'disableAutoScroll'));
 				}
 			},
-			messageListScroll: function messageListScroll() {
+			setConversationMessagesScrollHandler: function setConversationMessagesScrollHandler() {
+				if (!Im.conversationId) {
+					return;
+				}
+
+				const conversationMessagesScrollElement = $1('.conversationMessages .scroll-element').last();
+
+				for (const event of ['mousemove', 'touchmove', 'wheel']) {
+					conversationMessagesScrollElement.on(event, $1.context(this, 'disableAutoScroll'));
+				}
+
+				this.setConversationMessagesMiddleMouseHandler();
+			},
+			setConversationMessagesMiddleMouseHandler: function setConversationMessagesMiddleMouseHandler() {
+				const conversationMessages = $1('.conversationMessages');
+
+				for (const event of ['mousedown', 'mouseup', 'mousemove']) {
+					conversationMessages.on(
+						event,
+						function (e) {
+							if (e.button === 1) {
+								this.middleMouseButtonDown = e.type === 'mousedown';
+							} else if (event === 'mousemove' && this.middleMouseButtonDown) {
+								this.disableAutoScroll();
+							}
+						}.bind(this),
+					);
+				}
+			},
+			disableAutoScroll: function disableAutoScroll() {
+				if (this.requestAnimationFrameId) {
+					cancelAnimationFrame(this.requestAnimationFrameId);
+				}
+
+				this.autoScrollEnabled = false;
+			},
+			messageListScroll: function messageListScroll(e) {
+				if (this.autoScrollEnabled) {
+					this.requestAnimationFrameId = requestAnimationFrame(this.scrollDialogToBottom.bind(this, true));
+				} else if (isScrolledToBottom(e)) {
+					this.autoScrollEnabled = true;
+				}
+
 				if (
 					this.$dialog.data('pages') &&
 					this.$dialog.data('pages') > 0 &&
@@ -1358,7 +1411,7 @@ function formatTime(time) {
 				var id = url.searchParams.get('message_id');
 				var $el = $1('#message-' + id);
 				if ($el.length) {
-					$el[0].scrollIntoView();
+					$el[0].scrollIntoView(false);
 					disableScrolling = true;
 					this.animateBackgroundColor($el);
 				}
@@ -1409,9 +1462,9 @@ function formatTime(time) {
 				new XenForo.ExtLoader(
 					ajaxData,
 					function () {
+						this.autoScrollEnabled = true;
 						this.deleteTooltips();
 						$1('.ImViewContent').html(ajaxData.templateHtml).xfActivate();
-						$1('.conversationMessages img').on('load', this.scrollDialogToBottom.bind(this));
 						if (!this._fullModeEnabled) {
 							$1('.conversationList').hide();
 						}
