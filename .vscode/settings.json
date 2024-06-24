@@ -21,7 +21,10 @@
 		"defaulticon",
 		"ecdns",
 		"equilpres",
+		"fastify",
 		"iframes",
+		"lolz",
+		"lolzteam",
 		"onurlchange",
 		"prefixer",
 		"tailwindcss",
@@ -29,6 +32,7 @@
 		"tseslint",
 		"userscript",
 		"userscripts",
-		"xmlhttp"
+		"xmlhttp",
+		"zelenka"
 	]
 }

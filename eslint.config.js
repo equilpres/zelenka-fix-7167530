@@ -30,6 +30,6 @@ export default [
 		},
 	},
 	{
-		ignores: ['build', 'postcss.config.cjs'],
+		ignores: ['build', 'static', 'postcss.config.cjs'],
 	},
 ];

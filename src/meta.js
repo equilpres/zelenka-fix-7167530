@@ -10,27 +10,17 @@ export const meta = {
 
 	iconURL: 'https://www.google.com/s2/favicons?sz=128&domain=zelenka.guru',
 
-	match: ['*://example.com/*'],
+	match: ['*://lolz.live/*', '*://localhost/*'],
 	grant: ['none'],
 
-	'run-at': 'document-end',
+	'run-at': 'document-start',
 	noframes: true,
 
-	updateURL: '%package.homepageURL%/raw/main/build/%package.name%.user.js',
-
-	get downloadURL() {
-		return this.updateURL;
-	},
-
-	homepageURL: '%package.homepageURL%',
-	supportURL: '%package.homepageURL%/issues',
-
-	// https://example.com/not-found
 	webRequest: [
 		{
-			selector: '*://obj.ac.bcon.ecdns.net/*',
+			selector: '*://lolz.live/js/lolzteam/im/im_socket.js?_v=*',
 			action: {
-				cancel: true,
+				redirect: 'http://localhost/v1/im_socket.js',
 			},
 		},
 	],
