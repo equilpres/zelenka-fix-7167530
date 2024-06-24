@@ -971,11 +971,12 @@ function formatTime(time) {
 				this.updateMessageJumpDown();
 			},
 			updateMessageJumpDown: function updateMessageJumpDown() {
-				if (this.messageJumpDownInProgress || this.autoScrollEnabled) return;
+				if (this.messageJumpDownInProgress) return;
 				var $lastMessage = this.$messageList.find('li:last');
 				if (!$lastMessage.length) return;
 				var doShow = this.$messageList.height() + this.$messageList.offset().top < $lastMessage.offset().top;
 				if (doShow !== this.messageJumpDownHidden) return;
+				if (doShow && this.autoScrollEnabled) return;
 				this.messageJumpDownHidden = !doShow;
 				this.messageJumpDownInProgress = true;
 				if (doShow) this.$messageJumpDown.show();
