@@ -1052,6 +1052,7 @@ function formatTime(time) {
 
 				const conversationMessagesScrollElement = $1('.conversationMessages .scroll-element').last();
 
+				// equilpres: Все окей, телега так же делает и на меньшие вещи
 				for (const event of ['mousemove', 'touchmove', 'wheel']) {
 					conversationMessagesScrollElement.on(event, $1.context(this, 'disableAutoScroll'));
 				}
@@ -1061,6 +1062,7 @@ function formatTime(time) {
 			setConversationMessagesMiddleMouseHandler: function setConversationMessagesMiddleMouseHandler() {
 				const conversationMessages = $1('.conversationMessages');
 
+				// equilpres: Все окей, телега так же делает и на меньшие вещи
 				for (const event of ['mousedown', 'mouseup', 'mousemove']) {
 					conversationMessages.on(
 						event,
