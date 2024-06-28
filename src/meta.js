@@ -23,5 +23,11 @@ export const meta = {
 				redirect: 'http://localhost/v1/im_socket.js',
 			},
 		},
+		{
+			selector: '*://lolz.live/js/lolzteam/ng/notify/im.js?_v=*',
+			action: {
+				redirect: 'http://localhost/v1/im.js',
+			},
+		},
 	],
 };

@@ -1,4 +1,4 @@
 import { health } from './health.js';
-import { imSocket } from './im-socket.js';
+import { staticRoute } from './static.js';
 
-export const handlers = [health, imSocket];
+export const handlers = [health, staticRoute];

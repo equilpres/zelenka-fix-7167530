@@ -5,11 +5,11 @@
 // @author       Слава Соколов (equilpres)
 // @iconURL      https://www.google.com/s2/favicons?sz=128&domain=zelenka.guru
 // @match        *://lolz.live/*
-// @match        *://pub-2c6eb843124a4b7c91c44760fe682184.r2.dev/*
+// @match        *://localhost/*
 // @grant        none
 // @run-at       document-start
 // @noframes
-// @webRequest   [{"selector":"*://lolz.live/js/lolzteam/im/im_socket.js?_v=*","action":{"redirect":"https://pub-2c6eb843124a4b7c91c44760fe682184.r2.dev/v1/im_socket.js"}}]
+// @webRequest   [{"selector":"*://lolz.live/js/lolzteam/im/im_socket.js?_v=*","action":{"redirect":"http://localhost/v1/im_socket.js"}},{"selector":"*://lolz.live/js/lolzteam/ng/notify/im.js?_v=*","action":{"redirect":"http://localhost/v1/im.js"}}]
 // ==/UserScript==
 
 /* eslint-disable */

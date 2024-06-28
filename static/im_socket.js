@@ -1446,7 +1446,7 @@ function formatTime(time) {
 							{
 								scrollTop: $message.scrollHeight,
 							},
-							2000,
+							this.autoScrollEnabled ? 2000 : 'smooth',
 							function () {
 								this.isSmoothScrolling = false;
 							}.bind(this),
