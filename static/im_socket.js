@@ -165,8 +165,10 @@ function formatTime(time) {
 					}
 				}
 				this.autoScrollEnabled = true;
+				this.isSmoothScrolling = false;
 				this.middleMouseButtonDown = false;
 				this.requestAnimationFrameId = 0;
+				this.smoothScrollAnimation = undefined;
 				this.updateSelectors(disableScrolling);
 				this.loadPreviousMessagesInProgress = false;
 				this.loadNextMessagesInProgress = false;
@@ -228,11 +230,7 @@ function formatTime(time) {
 				// if (this.$ed) this.$ed.$textarea.on('lzt-editor:initDone', this.resize.bind(this));
 				$1(document1).on('lzt-editor:toolbar-toggle', this.resize.bind(this));
 				$container.find('ul.autoCompleteList').scrollbar();
-				$1('.conversationMessages img').on('load', function () {
-					if (_this.conversationListLoadInProgress !== false) {
-						_this.scrollDialogToBottom(true);
-					}
-				});
+				$1('.conversationMessages img, .conversationMessages video').on('load loadeddata', this.scrollDialogToBottom.bind(this));
 			},
 			setConversationListTime: function setConversationListTime() {
 				$1('.conversationItem--messageDate').each(function () {
@@ -1081,15 +1079,15 @@ function formatTime(time) {
 				for (var _i = 0, _iter = ['mousedown', 'mouseup', 'mousemove']; _i < _iter.length; _i++) _loop(_i, _iter);
 			},
 			disableAutoScroll: function disableAutoScroll(e) {
-				if (this.autoScrollEnabled) {
-					this.requestAnimationFrameId = requestAnimationFrame(this.scrollDialogToBottom.bind(this, true));
-				} else if (isScrolledToBottom(e)) {
-					this.autoScrollEnabled = true;
-				}
 				if (this.requestAnimationFrameId) {
 					cancelAnimationFrame(this.requestAnimationFrameId);
 				}
+				if (this.smoothScrollAnimation) {
+					this.$messageList.stop();
+					this.smoothScrollAnimation.stop();
+				}
 				this.autoScrollEnabled = false;
+				this.isSmoothScrolling = false;
 			},
 			messageListScroll: function messageListScroll(e) {
 				if (this.autoScrollEnabled) {
@@ -1428,13 +1426,31 @@ function formatTime(time) {
 			if (!disableScrolling) {
 				var $messageList = this.$dialog.find('#ConversationMessageList');
 				if ($messageList.length) {
+					const [$message] = $messageList;
+
 					if (instant) {
-						$messageList.scrollTop($messageList[0].scrollHeight);
+						if (!this.autoScrollEnabled || this.isSmoothScrolling) {
+							return;
+						}
+
+						$messageList.scrollTop($message.scrollHeight);
 					} else {
-						$messageList[0].scrollTo({
-							top: $messageList[0].scrollHeight,
-							behavior: 'smooth',
-						});
+						if (this.smoothScrollAnimation) {
+							this.$messageList.stop();
+							this.smoothScrollAnimation.stop();
+						}
+
+						this.isSmoothScrolling = true;
+
+						this.smoothScrollAnimation = $messageList.animate(
+							{
+								scrollTop: $message.scrollHeight,
+							},
+							2000,
+							function () {
+								this.isSmoothScrolling = false;
+							}.bind(this),
+						);
 					}
 				}
 			}
@@ -1474,7 +1490,10 @@ function formatTime(time) {
 						this.autoScrollEnabled = true;
 						this.deleteTooltips();
 						$1('.ImViewContent').html(ajaxData.templateHtml).xfActivate();
-						$1('.conversationMessages img').on('load', this.scrollDialogToBottom.bind(this));
+						$1('.conversationMessages img, .conversationMessages video').on(
+							'load loadeddata',
+							this.scrollDialogToBottom.bind(this),
+						);
 						if (!this._fullModeEnabled) {
 							$1('.conversationList').hide();
 						}
