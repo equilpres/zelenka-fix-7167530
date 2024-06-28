@@ -54,8 +54,10 @@ function isScrolledIntoView(elem) {
 	return elemBottom <= docViewBottom && elemTop >= docViewTop;
 }
 function isScrolledToBottom(e) {
-	const { scrollHeight, clientHeight, scrollTop } = e.target;
-
+	var _e_target = e.target,
+		scrollHeight = _e_target.scrollHeight,
+		clientHeight = _e_target.clientHeight,
+		scrollTop = _e_target.scrollTop;
 	return Math.round(scrollHeight - clientHeight - scrollTop) === 0;
 }
 function listenCall(method, callback, obj) {
@@ -226,6 +228,11 @@ function formatTime(time) {
 				// if (this.$ed) this.$ed.$textarea.on('lzt-editor:initDone', this.resize.bind(this));
 				$1(document1).on('lzt-editor:toolbar-toggle', this.resize.bind(this));
 				$container.find('ul.autoCompleteList').scrollbar();
+				$1('.conversationMessages img').on('load', function () {
+					if (_this.conversationListLoadInProgress !== false) {
+						_this.scrollDialogToBottom(true);
+					}
+				});
 			},
 			setConversationListTime: function setConversationListTime() {
 				$1('.conversationItem--messageDate').each(function () {
@@ -691,18 +698,11 @@ function formatTime(time) {
 						},
 					);
 					$1('#ctrl_reply_message_ids').val('');
-					var delayedMessageTimeout = null;
-					if (!isNeedToRenderBbCode) {
-						this.insertMessageFromEditor(content, messageTime);
-						var $lastMessageHelper = $1('.MessageHelper:last');
-						setTimeout(function () {
-							$lastMessageHelper.find('.fa-clock').removeClass('hidden');
-							$lastMessageHelper.find('.fa-check').addClass('hidden');
-						}, 500);
-					}
+					this.insertMessageFromEditor(content, messageTime);
 					var ajaxCallback = function (data) {
 						if (XenForo.hasResponseError(data)) {
 							_this.$ed.ed.html.set(content);
+							_this.$container.trigger('insertMessageError');
 						}
 						_this.hideMask();
 						_this.$ed.ed.events.focus();
@@ -833,6 +833,12 @@ function formatTime(time) {
 				this.insertItemToConversationList($activeConversation, Im.conversationId);
 			},
 			insertMessageFromEditor: function insertMessageFromEditor(content, messageTime) {
+				if (!this.$quickReply.data('MSG_ID')) {
+					this.$container.trigger('insertMessageFromEditor', {
+						content: content,
+						messageTime: messageTime,
+					});
+				}
 				if (this.$ed) {
 					this.$ed.ed.html.set('');
 					this.hideMask();
@@ -1039,10 +1045,9 @@ function formatTime(time) {
 				if (!Im.conversationId) {
 					return;
 				}
-
 				this.$messageList.on('scroll', $1.context(this, 'messageListScroll'));
-
-				for (const event of ['wheel', 'touchmove']) {
+				for (var _i = 0, _iter = ['wheel', 'touchmove']; _i < _iter.length; _i++) {
+					var event = _iter[_i];
 					this.$messageList.on(event, $1.context(this, 'disableAutoScroll'));
 				}
 			},
@@ -1050,38 +1055,40 @@ function formatTime(time) {
 				if (!Im.conversationId) {
 					return;
 				}
-
-				const conversationMessagesScrollElement = $1('.conversationMessages .scroll-element').last();
-
-				// equilpres: Все окей, телега так же делает и на меньшие вещи
-				for (const event of ['mousemove', 'touchmove', 'wheel']) {
+				var conversationMessagesScrollElement = $1('.conversationMessages .scroll-element').last();
+				for (var _i = 0, _iter = ['mousemove', 'touchmove', 'wheel']; _i < _iter.length; _i++) {
+					var event = _iter[_i];
 					conversationMessagesScrollElement.on(event, $1.context(this, 'disableAutoScroll'));
 				}
-
 				this.setConversationMessagesMiddleMouseHandler();
 			},
 			setConversationMessagesMiddleMouseHandler: function setConversationMessagesMiddleMouseHandler() {
-				const conversationMessages = $1('.conversationMessages');
-
-				// equilpres: Все окей, телега так же делает и на меньшие вещи
-				for (const event of ['mousedown', 'mouseup', 'mousemove']) {
-					conversationMessages.on(
-						event,
-						function (e) {
-							if (e.button === 1) {
-								this.middleMouseButtonDown = e.type === 'mousedown';
-							} else if (event === 'mousemove' && this.middleMouseButtonDown) {
-								this.disableAutoScroll();
-							}
-						}.bind(this),
-					);
-				}
+				var _this = this,
+					_loop = function (_i, _iter) {
+						var event = _iter[_i];
+						conversationMessages.on(
+							event,
+							function (e) {
+								if (e.button === 1) {
+									this.middleMouseButtonDown = e.type === 'mousedown';
+								} else if (event === 'mousemove' && this.middleMouseButtonDown) {
+									this.disableAutoScroll();
+								}
+							}.bind(_this),
+						);
+					};
+				var conversationMessages = $1('.conversationMessages');
+				for (var _i = 0, _iter = ['mousedown', 'mouseup', 'mousemove']; _i < _iter.length; _i++) _loop(_i, _iter);
 			},
-			disableAutoScroll: function disableAutoScroll() {
+			disableAutoScroll: function disableAutoScroll(e) {
+				if (this.autoScrollEnabled) {
+					this.requestAnimationFrameId = requestAnimationFrame(this.scrollDialogToBottom.bind(this, true));
+				} else if (isScrolledToBottom(e)) {
+					this.autoScrollEnabled = true;
+				}
 				if (this.requestAnimationFrameId) {
 					cancelAnimationFrame(this.requestAnimationFrameId);
 				}
-
 				this.autoScrollEnabled = false;
 			},
 			messageListScroll: function messageListScroll(e) {
@@ -1090,7 +1097,6 @@ function formatTime(time) {
 				} else if (isScrolledToBottom(e)) {
 					this.autoScrollEnabled = true;
 				}
-
 				if (
 					this.$dialog.data('pages') &&
 					this.$dialog.data('pages') > 0 &&
@@ -1468,6 +1474,7 @@ function formatTime(time) {
 						this.autoScrollEnabled = true;
 						this.deleteTooltips();
 						$1('.ImViewContent').html(ajaxData.templateHtml).xfActivate();
+						$1('.conversationMessages img').on('load', this.scrollDialogToBottom.bind(this));
 						if (!this._fullModeEnabled) {
 							$1('.conversationList').hide();
 						}
@@ -1488,17 +1495,22 @@ function formatTime(time) {
 							Im.selectedMessages = [];
 						}
 						this.$messageList.find('ol > li').each(this.setMessageTime);
+						this.$container.trigger('LoadConversation', [Im.conversationId]);
 						createNavigationCache();
 					}.bind(this),
 				);
 			}
 		}),
 		_define_property(_obj, 'bindQuoteHandler', function bindQuoteHandler($messages) {
-			$messages.find('.quoteAuthor').on(
+			$messages.on(
 				'click',
 				function (e) {
+					if (!$1(e.target).closest('.quoteAuthor').length) {
+						return;
+					}
+					var target = $1(e.target).closest('.quoteAuthor');
 					e.preventDefault();
-					var messageId = $1(e.currentTarget).data('content-id');
+					var messageId = target.data('content-id');
 					var loadedMessage = $1('#message-' + messageId);
 					if (loadedMessage.length) {
 						XenForo.preservePopstate = true;
@@ -1725,6 +1737,20 @@ function formatTime(time) {
 			});
 		});
 	};
+	(function (FroalaEditor1) {
+		FroalaEditor1.PLUGINS.typingIm = function (ed) {
+			var publish = true;
+			ed.events.on('input', function () {
+				if (publish) {
+					$1('#Conversations').data('Im.Start').$container.trigger('typingIm');
+					publish = false;
+					setTimeout(function () {
+						return (publish = true);
+					}, 3000);
+				}
+			});
+		};
+	})(FroalaEditor);
 	XenForo.register('#Conversations', 'Im.Start');
 	XenForo.register('.TranslateMessageButton', 'Im.TranslateMessageButton');
 	XenForo.register('.EditMessage', 'Im.EditMessage');
