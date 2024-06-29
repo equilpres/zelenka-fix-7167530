@@ -3,7 +3,7 @@
 // @description  Boilerplate for Tampermonkey userscripts in TypeScript
 // @version      0.0.0
 // @author       Слава Соколов (equilpres)
-// @iconURL      https://www.google.com/s2/favicons?sz=128&domain=zelenka.guru
+// @iconURL      https://lolz.live/styles/brand/download/avatars/three_avatar.svg
 // @match        *://lolz.live/*
 // @match        *://localhost/*
 // @grant        none
