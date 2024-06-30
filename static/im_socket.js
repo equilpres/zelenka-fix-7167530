@@ -912,6 +912,7 @@ function formatTime(time) {
 					this.totalPages = this.$dialog.data('pages');
 					this.currentPage = this.$dialog.data('page') || 1;
 					this.currentDownPage = this.$dialog.data('page');
+					this.autoScrollEnabled = this.currentDownPage === 1;
 					this.$scrollHelper = $1('.MessageListInsertHelper');
 					this.$typingNotice = this.$dialog.find('.TypingNotice');
 					this.setQuickReplyHandler();
@@ -1092,7 +1093,7 @@ function formatTime(time) {
 			messageListScroll: function messageListScroll(e) {
 				if (this.autoScrollEnabled) {
 					this.requestAnimationFrameId = requestAnimationFrame(this.scrollDialogToBottom.bind(this, true));
-				} else if (isScrolledToBottom(e)) {
+				} else if (isScrolledToBottom(e) && this.currentDownPage === 1) {
 					this.autoScrollEnabled = true;
 				}
 				if (
