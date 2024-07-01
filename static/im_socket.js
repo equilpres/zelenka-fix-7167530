@@ -671,6 +671,7 @@ function formatTime(time) {
 					var content = this.prepareContent(this.$ed.ed.html.get());
 					if (!content && !$1('#ctrl_reply_message_ids').val().length) {
 						this.hideMask();
+						_this.$ed.ed.events.focus();
 						return;
 					}
 					isNeedToRenderBbCode = this.needToRenderBbCode(content);
